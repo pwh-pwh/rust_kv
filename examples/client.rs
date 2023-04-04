@@ -56,10 +56,10 @@ async fn main() -> Result<()> {
     if let Some(Ok(data)) = client.next().await {
         info!("Get get_cmd response {:?}",data);
     }
-    let ex_cmd = CommandRequest::new_hexist("table1","hello");
-    client.send(ex_cmd).await?;
+    let emx_cmd = CommandRequest::new_hmexist("table1",vec!["hello","name"]);
+    client.send(emx_cmd).await?;
     if let Some(Ok(data)) = client.next().await {
-        info!("Get ex_cmd response {:?}",data);
+        info!("Get emx_cmd response {:?}",data);
     }
 
     Ok(())

@@ -19,6 +19,21 @@ impl CommandService for Hexist {
     }
 }
 
+impl CommandService for Hmexist {
+    fn execute(self, store: &impl Storage) -> CommandResponse {
+        let mut vs = vec![];
+        for x in self.keys {
+            match store.contains(&self.table,&x) {
+                Ok(flag) => {
+                    vs.push(Value::from(flag))
+                },
+                Err(e) => return e.into(),
+            }
+        }
+        vs.into()
+    }
+}
+
 impl CommandService for Hdel {
     fn execute(self, store: &impl Storage) -> CommandResponse {
         match store.del(&self.table, &self.key) {

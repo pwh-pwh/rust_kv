@@ -15,12 +15,25 @@ impl CommandRequest {
             })),
         }
     }
-    
-    pub fn new_hexist(table: impl Into<String>,key: impl Into<String>) -> Self {
+
+    pub fn new_hexist(table: impl Into<String>, key: impl Into<String>) -> Self {
         Self {
             request_data: Some(RequestData::Hexist(Hexist {
                 table: table.into(),
                 key: key.into(),
+            }))
+        }
+    }
+
+    pub fn new_hmexist(table: impl Into<String>, keys: Vec<impl Into<String>>) -> Self {
+        let mut vs = vec![];
+        for x in keys {
+            vs.push(x.into());
+        }
+        Self {
+            request_data: Some(RequestData::Hmexist(Hmexist {
+                table: table.into(),
+                keys: vs,
             }))
         }
     }
@@ -68,28 +81,27 @@ impl CommandRequest {
         }
     }
 
-    pub fn new_hdel(table:impl Into<String>,key:impl Into<String>) -> Self {
+    pub fn new_hdel(table: impl Into<String>, key: impl Into<String>) -> Self {
         Self {
-            request_data: Some(RequestData::Hdel(Hdel{
+            request_data: Some(RequestData::Hdel(Hdel {
                 table: table.into(),
                 key: key.into(),
             }))
         }
     }
-    
-    pub fn new_hmdel(table:impl Into<String>,keys:Vec<impl Into<String>>) -> Self {
+
+    pub fn new_hmdel(table: impl Into<String>, keys: Vec<impl Into<String>>) -> Self {
         let mut v = vec![];
         for x in keys {
             v.push(x.into());
         }
         Self {
-            request_data: Some(RequestData::Hmdel(Hmdel{
+            request_data: Some(RequestData::Hmdel(Hmdel {
                 table: table.into(),
                 keys: v,
             })),
         }
     }
-
 }
 
 impl Kvpair {
@@ -103,9 +115,9 @@ impl Kvpair {
 }
 
 impl<K, V> From<(K, V)> for Kvpair
-where
-    K: Into<String>,
-    V: Into<Value>,
+    where
+        K: Into<String>,
+        V: Into<Value>,
 {
     fn from((k, v): (K, V)) -> Self {
         Self::new(k, v.into())
