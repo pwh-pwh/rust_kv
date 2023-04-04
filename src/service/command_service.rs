@@ -1,4 +1,3 @@
-
 use crate::*;
 
 impl CommandService for Hget {
@@ -11,22 +10,30 @@ impl CommandService for Hget {
     }
 }
 
+impl CommandService for Hdel {
+    fn execute(self, store: &impl Storage) -> CommandResponse {
+        match store.del(&self.table, &self.key) {
+            Ok(Some(v)) => v.into(),
+            Ok(None) => KvError::NotFound(self.table, self.key).into(),
+            Err(e) => e.into(),
+        }
+    }
+}
+
 impl CommandService for Hmset {
     fn execute(self, store: &impl Storage) -> CommandResponse {
         let mut vs = vec![];
         for x in self.pairs {
-            match store.set(&self.table,x.key,x.value.unwrap_or_default()) {
+            match store.set(&self.table, x.key, x.value.unwrap_or_default()) {
                 Ok(Some(v)) => {
                     vs.push(v);
-                },
+                }
                 Ok(None) => {
-                    vs.push(Value{
-                        value:None
-                    });
-                },
+                    vs.push(Value { value: None });
+                }
                 Err(e) => {
                     return e.into();
-                },
+                }
             }
         }
         vs.into()
@@ -37,15 +44,13 @@ impl CommandService for Hmget {
     fn execute(self, store: &impl Storage) -> CommandResponse {
         let mut vs = vec![];
         for ref x in self.keys {
-            match store.get(&self.table,x) {
+            match store.get(&self.table, x) {
                 Ok(Some(v)) => {
                     vs.push(v);
-                },
+                }
                 Ok(None) => {
-                    vs.push(Value{
-                        value: None
-                    });
-                },
+                    vs.push(Value { value: None });
+                }
                 Err(e) => return e.into(),
             }
         }

@@ -32,11 +32,7 @@ async fn main() -> Result<()> {
     if let Some(Ok(data)) = client.next().await {
         info!("Get get_cmd response {:?}",data);
     }
-    let get_all_cmd = CommandRequest::new_hgetall("table1");
-    client.send(get_all_cmd).await?;
-    if let Some(Ok(data)) = client.next().await {
-        info!("Get get_cmd response {:?}",data);
-    }
+
     //get hmget
     let hmget_cmd = CommandRequest::new_hmget("table1", vec!["hello","aa"]);
     client.send(hmget_cmd).await?;
@@ -48,6 +44,17 @@ async fn main() -> Result<()> {
     client.send(hmset_cmd).await?;
     if let Some(Ok(data)) = client.next().await {
         info!("Get hmset_cmd response {:?}",data);
+    }
+    let hdel_cmd = CommandRequest::new_hdel("table1", "name");
+    client.send(hdel_cmd).await?;
+    if let Some(Ok(data)) = client.next().await {
+        info!("Get hdel_cmd response {:?}",data);
+    }
+
+    let get_all_cmd = CommandRequest::new_hgetall("table1");
+    client.send(get_all_cmd).await?;
+    if let Some(Ok(data)) = client.next().await {
+        info!("Get get_cmd response {:?}",data);
     }
 
     Ok(())
