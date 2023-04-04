@@ -45,10 +45,10 @@ async fn main() -> Result<()> {
     if let Some(Ok(data)) = client.next().await {
         info!("Get hmset_cmd response {:?}",data);
     }
-    let hdel_cmd = CommandRequest::new_hdel("table1", "name");
-    client.send(hdel_cmd).await?;
+    let hmdel_cmd = CommandRequest::new_hmdel("table1", vec!["name","age"]);
+    client.send(hmdel_cmd).await?;
     if let Some(Ok(data)) = client.next().await {
-        info!("Get hdel_cmd response {:?}",data);
+        info!("Get hmdel_cmd response {:?}",data);
     }
 
     let get_all_cmd = CommandRequest::new_hgetall("table1");

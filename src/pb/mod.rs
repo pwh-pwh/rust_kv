@@ -66,6 +66,19 @@ impl CommandRequest {
             }))
         }
     }
+    
+    pub fn new_hmdel(table:impl Into<String>,keys:Vec<impl Into<String>>) -> Self {
+        let mut v = vec![];
+        for x in keys {
+            v.push(x.into());
+        }
+        Self {
+            request_data: Some(RequestData::Hmdel(Hmdel{
+                table: table.into(),
+                keys: v,
+            })),
+        }
+    }
 
 }
 
