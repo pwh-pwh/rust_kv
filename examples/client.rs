@@ -56,6 +56,11 @@ async fn main() -> Result<()> {
     if let Some(Ok(data)) = client.next().await {
         info!("Get get_cmd response {:?}",data);
     }
+    let ex_cmd = CommandRequest::new_hexist("table1","hello");
+    client.send(ex_cmd).await?;
+    if let Some(Ok(data)) = client.next().await {
+        info!("Get ex_cmd response {:?}",data);
+    }
 
     Ok(())
 }

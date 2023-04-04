@@ -4,6 +4,7 @@ use crate::KvError;
 use abi::{command_request::RequestData, *};
 use http::StatusCode;
 
+
 impl CommandRequest {
     /// 创建 HGET 命令
     pub fn new_hget(table: impl Into<String>, key: impl Into<String>) -> Self {
@@ -12,6 +13,15 @@ impl CommandRequest {
                 table: table.into(),
                 key: key.into(),
             })),
+        }
+    }
+    
+    pub fn new_hexist(table: impl Into<String>,key: impl Into<String>) -> Self {
+        Self {
+            request_data: Some(RequestData::Hexist(Hexist {
+                table: table.into(),
+                key: key.into(),
+            }))
         }
     }
 
@@ -125,6 +135,14 @@ impl From<i64> for Value {
     fn from(i: i64) -> Self {
         Self {
             value: Some(value::Value::Integer(i)),
+        }
+    }
+}
+
+impl From<bool> for Value {
+    fn from(value: bool) -> Self {
+        Self {
+            value: Some(value::Value::Bool(value)),
         }
     }
 }

@@ -56,6 +56,7 @@ pub fn dispatch(cmd: CommandRequest, store: &impl Storage) -> CommandResponse {
         Some(RequestData::Hmset(param)) => param.execute(store),
         Some(RequestData::Hdel(param)) => param.execute(store),
         Some(RequestData::Hmdel(param)) => param.execute(store),
+        Some(RequestData::Hexist(param)) => param.execute(store),
         None => KvError::InvalidCommand("Request has no data".into()).into(),
         _ => KvError::Internal("Not implemented".into()).into(),
     }

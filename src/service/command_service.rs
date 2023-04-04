@@ -10,6 +10,15 @@ impl CommandService for Hget {
     }
 }
 
+impl CommandService for Hexist {
+    fn execute(self, store: &impl Storage) -> CommandResponse {
+        match store.contains(&self.table,&self.key) {
+            Ok(flag) => Value::from(flag).into(),
+            Err(e) => e.into()
+        }
+    }
+}
+
 impl CommandService for Hdel {
     fn execute(self, store: &impl Storage) -> CommandResponse {
         match store.del(&self.table, &self.key) {
@@ -19,6 +28,7 @@ impl CommandService for Hdel {
         }
     }
 }
+
 
 impl CommandService for Hmdel {
     fn execute(self, store: &impl Storage) -> CommandResponse {
