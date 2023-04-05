@@ -1,9 +1,9 @@
 mod command_service;
 
+use crate::storage::Storage;
+use crate::{CommandRequest, CommandResponse, KvError, MemTable};
 use std::sync::Arc;
 use tracing::debug;
-use crate::{CommandRequest, CommandResponse, KvError, MemTable};
-use crate::storage::Storage;
 
 /// 对 Command 的处理的抽象
 pub trait CommandService {
@@ -57,12 +57,11 @@ pub fn dispatch(cmd: CommandRequest, store: &impl Storage) -> CommandResponse {
         Some(RequestData::Hdel(param)) => param.execute(store),
         Some(RequestData::Hmdel(param)) => param.execute(store),
         Some(RequestData::Hexist(param)) => param.execute(store),
-        Some(RequestData::Hmexist(param)) =>param.execute(store),
+        Some(RequestData::Hmexist(param)) => param.execute(store),
         None => KvError::InvalidCommand("Request has no data".into()).into(),
         _ => KvError::Internal("Not implemented".into()).into(),
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -92,9 +91,9 @@ mod tests {
     }
 }
 
+use crate::command_request::RequestData;
 #[cfg(test)]
 use crate::{Kvpair, Value};
-use crate::command_request::RequestData;
 
 // 测试成功返回的结果
 #[cfg(test)]

@@ -20,8 +20,8 @@ pub trait Storage {
 
 #[cfg(test)]
 mod tests {
-    use crate::storage::memory::MemTable;
     use super::*;
+    use crate::storage::memory::MemTable;
 
     #[test]
     fn memtable_basic_interface_should_work() {

@@ -12,9 +12,9 @@ impl CommandService for Hget {
 
 impl CommandService for Hexist {
     fn execute(self, store: &impl Storage) -> CommandResponse {
-        match store.contains(&self.table,&self.key) {
+        match store.contains(&self.table, &self.key) {
             Ok(flag) => Value::from(flag).into(),
-            Err(e) => e.into()
+            Err(e) => e.into(),
         }
     }
 }
@@ -23,10 +23,8 @@ impl CommandService for Hmexist {
     fn execute(self, store: &impl Storage) -> CommandResponse {
         let mut vs = vec![];
         for x in self.keys {
-            match store.contains(&self.table,&x) {
-                Ok(flag) => {
-                    vs.push(Value::from(flag))
-                },
+            match store.contains(&self.table, &x) {
+                Ok(flag) => vs.push(Value::from(flag)),
                 Err(e) => return e.into(),
             }
         }
@@ -44,20 +42,15 @@ impl CommandService for Hdel {
     }
 }
 
-
 impl CommandService for Hmdel {
     fn execute(self, store: &impl Storage) -> CommandResponse {
         let mut vs = vec![];
         for x in self.keys {
-            match store.del(&self.table,&x) {
+            match store.del(&self.table, &x) {
                 Ok(Some(v)) => {
                     vs.push(v);
-                },
-                Ok(None) => {
-                    vs.push(Value{
-                        value: None
-                    })
-                },
+                }
+                Ok(None) => vs.push(Value { value: None }),
                 Err(e) => return e.into(),
             }
         }
