@@ -4,7 +4,6 @@ use crate::KvError;
 use abi::{command_request::RequestData, *};
 use http::StatusCode;
 
-
 impl CommandRequest {
     /// 创建 HGET 命令
     pub fn new_hget(table: impl Into<String>, key: impl Into<String>) -> Self {
@@ -21,7 +20,7 @@ impl CommandRequest {
             request_data: Some(RequestData::Hexist(Hexist {
                 table: table.into(),
                 key: key.into(),
-            }))
+            })),
         }
     }
 
@@ -34,7 +33,7 @@ impl CommandRequest {
             request_data: Some(RequestData::Hmexist(Hmexist {
                 table: table.into(),
                 keys: vs,
-            }))
+            })),
         }
     }
 
@@ -86,7 +85,7 @@ impl CommandRequest {
             request_data: Some(RequestData::Hdel(Hdel {
                 table: table.into(),
                 key: key.into(),
-            }))
+            })),
         }
     }
 
@@ -115,9 +114,9 @@ impl Kvpair {
 }
 
 impl<K, V> From<(K, V)> for Kvpair
-    where
-        K: Into<String>,
-        V: Into<Value>,
+where
+    K: Into<String>,
+    V: Into<Value>,
 {
     fn from((k, v): (K, V)) -> Self {
         Self::new(k, v.into())
