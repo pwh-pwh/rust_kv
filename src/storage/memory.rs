@@ -13,7 +13,7 @@ pub struct StorageIter<T> {
 }
 
 impl<T> StorageIter<T> {
-    fn new(data:T) ->Self {
+    pub fn new(data:T) ->Self {
         Self{
             data
         }
@@ -54,9 +54,9 @@ impl Storage for MemTable {
         Ok(table.get(key).map(|v| v.value().clone()))
     }
 
-    fn set(&self, table: &str, key: String, value: Value) -> Result<Option<Value>, KvError> {
+    fn set(&self, table: &str, key: impl Into<String>, value: impl Into<Value>) -> Result<Option<Value>, KvError> {
         let table = self.get_or_create_table(table);
-        Ok(table.insert(key, value))
+        Ok(table.insert(key.into(), value.into()))
     }
 
     fn contains(&self, table: &str, key: &str) -> Result<bool, KvError> {
