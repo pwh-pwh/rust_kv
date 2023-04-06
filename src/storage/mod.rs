@@ -35,11 +35,11 @@ mod tests {
         test_get_all(store);
     }
 
-    // #[test]
-    // fn memtable_iter_should_work() {
-    //     let store = MemTable::new();
-    //     test_get_iter(store);
-    // }
+    #[test]
+    fn memtable_iter_should_work() {
+        let store = MemTable::new();
+        test_get_iter(store);
+    }
 
     fn test_basi_interface(store: impl Storage) {
         // 第一次 set 会创建 table，插入 key 并返回 None（之前没值）

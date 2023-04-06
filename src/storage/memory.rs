@@ -1,11 +1,32 @@
 use crate::{KvError, Kvpair, Storage, Value};
 use dashmap::{mapref::one::Ref, DashMap};
-use std::str::Chars;
+
 
 /// 使用 DashMap 构建的 MemTable，实现了 Storage trait
 #[derive(Clone, Debug, Default)]
 pub struct MemTable {
     tables: DashMap<String, DashMap<String, Value>>,
+}
+
+pub struct StorageIter<T> {
+    data: T
+}
+
+impl<T> StorageIter<T> {
+    fn new(data:T) ->Self {
+        Self{
+            data
+        }
+    }
+}
+
+impl<T> Iterator for StorageIter<T>
+where T:Iterator,
+T::Item: Into<Kvpair> {
+    type Item = Kvpair;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.data.next().map(|v|v.into())
+    }
 }
 
 impl MemTable {
@@ -56,7 +77,9 @@ impl Storage for MemTable {
             .collect())
     }
 
-    fn get_iter(&self, _table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError> {
-        todo!()
+    fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError> {
+        let table = self.get_or_create_table(table).clone();
+        let iter = StorageIter::new(table.into_iter());
+        Ok(Box::new(iter))
     }
 }
