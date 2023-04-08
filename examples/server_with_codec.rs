@@ -1,8 +1,8 @@
 use anyhow::Result;
 use async_prost::{AsyncProstStream, Frame};
 use futures::prelude::*;
-use prost::Message;
 use kv::{CommandRequest, CommandResponse, MemTable, Service, ServiceInner};
+use prost::Message;
 use tokio::net::TcpListener;
 use tokio_util::codec::{Framed, LengthDelimitedCodec};
 use tracing::info;
@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
         let svc = service.clone();
         tokio::spawn(async move {
             //let mut stream = AsyncProstStream::<_, CommandRequest, CommandResponse, _>::from(stream).for_async();
-            let mut stream = Framed::new(stream,LengthDelimitedCodec::new());
+            let mut stream = Framed::new(stream, LengthDelimitedCodec::new());
             while let Some(Ok(mut buf)) = stream.next().await {
                 let cmd = CommandRequest::decode(&buf[..]).unwrap();
                 info!("Got a new command: {:?}", cmd);

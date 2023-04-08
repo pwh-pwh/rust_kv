@@ -2,6 +2,7 @@ pub mod abi;
 
 use crate::KvError;
 use abi::{command_request::RequestData, *};
+use bytes::Bytes;
 use http::StatusCode;
 use prost::Message;
 
@@ -226,5 +227,19 @@ impl TryFrom<&[u8]> for Value {
     fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
         let msg = Value::decode(data)?;
         Ok(msg)
+    }
+}
+
+impl<const N: usize> From<&[u8; N]> for Value {
+    fn from(buf: &[u8; N]) -> Self {
+        Bytes::copy_from_slice(&buf[..]).into()
+    }
+}
+
+impl From<Bytes> for Value {
+    fn from(buf: Bytes) -> Self {
+        Self {
+            value: Some(value::Value::Binary(buf)),
+        }
     }
 }
