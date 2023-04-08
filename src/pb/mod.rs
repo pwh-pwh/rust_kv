@@ -2,7 +2,9 @@ pub mod abi;
 
 use crate::KvError;
 use abi::{command_request::RequestData, *};
+use bytes::Bytes;
 use http::StatusCode;
+use prost::Message;
 
 impl CommandRequest {
     /// 创建 HGET 命令
@@ -207,5 +209,37 @@ impl From<KvError> for CommandResponse {
         }
 
         result
+    }
+}
+
+impl TryFrom<Value> for Vec<u8> {
+    type Error = KvError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        let mut buf = Vec::with_capacity(v.encoded_len());
+        v.encode(&mut buf)?;
+        Ok(buf)
+    }
+}
+
+impl TryFrom<&[u8]> for Value {
+    type Error = KvError;
+
+    fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
+        let msg = Value::decode(data)?;
+        Ok(msg)
+    }
+}
+
+impl<const N: usize> From<&[u8; N]> for Value {
+    fn from(buf: &[u8; N]) -> Self {
+        Bytes::copy_from_slice(&buf[..]).into()
+    }
+}
+
+impl From<Bytes> for Value {
+    fn from(buf: Bytes) -> Self {
+        Self {
+            value: Some(value::Value::Binary(buf)),
+        }
     }
 }
