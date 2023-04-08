@@ -211,7 +211,6 @@ impl From<KvError> for CommandResponse {
     }
 }
 
-
 impl TryFrom<Value> for Vec<u8> {
     type Error = KvError;
     fn try_from(v: Value) -> Result<Self, Self::Error> {

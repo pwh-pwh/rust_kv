@@ -12,6 +12,7 @@ http = "0.2" # 我们使用 HTTP status code 所以引入这个类型库
 prost = "0.9" # 处理 protobuf 的代码
 sled = "0.34"
 thiserror = "1" # 错误定义和处理
+tokio-util = { version = "0.7.7", features = ["codec"] }
 tracing = "0.1" # 日志处理
 
 [dev-dependencies]

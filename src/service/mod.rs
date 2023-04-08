@@ -55,30 +55,30 @@ impl<Store> Clone for Service<Store> {
 /// Service 内部数据结构
 pub struct ServiceInner<Store> {
     store: Store,
-    on_received:Vec<fn(&CommandRequest)>,
-    on_executed:Vec<fn(&CommandResponse)>,
-    on_before_send:Vec<fn(&mut CommandResponse)>,
-    on_after_send:Vec<fn()>,
+    on_received: Vec<fn(&CommandRequest)>,
+    on_executed: Vec<fn(&CommandResponse)>,
+    on_before_send: Vec<fn(&mut CommandResponse)>,
+    on_after_send: Vec<fn()>,
 }
 
-impl<Store:Storage>  ServiceInner<Store> {
-    pub fn fn_after_send(mut self,f:fn()) -> Self {
+impl<Store: Storage> ServiceInner<Store> {
+    pub fn fn_after_send(mut self, f: fn()) -> Self {
         self.on_after_send.push(f);
         self
     }
-    pub fn fn_before_send(mut self,f: fn(&mut CommandResponse)) -> Self {
+    pub fn fn_before_send(mut self, f: fn(&mut CommandResponse)) -> Self {
         self.on_before_send.push(f);
         self
     }
-    pub fn fn_executed(mut self,f:fn(&CommandResponse)) -> Self {
+    pub fn fn_executed(mut self, f: fn(&CommandResponse)) -> Self {
         self.on_executed.push(f);
         self
     }
-    pub fn fn_received(mut self,f: fn(&CommandRequest)) -> Self {
+    pub fn fn_received(mut self, f: fn(&CommandRequest)) -> Self {
         self.on_received.push(f);
         self
     }
-    pub fn new(store:Store) -> Self {
+    pub fn new(store: Store) -> Self {
         Self {
             store,
             on_received: vec![],
@@ -89,7 +89,7 @@ impl<Store:Storage>  ServiceInner<Store> {
     }
 }
 
-impl<Store:Storage> From<ServiceInner<Store>> for Service<Store> {
+impl<Store: Storage> From<ServiceInner<Store>> for Service<Store> {
     fn from(value: ServiceInner<Store>) -> Self {
         Self {
             inner: Arc::new(value),
@@ -231,7 +231,6 @@ mod tests1 {
         assert_eq!(res.values, vec![Value::default()]);
     }
 }
-
 
 #[cfg(test)]
 use crate::{Kvpair, Value};

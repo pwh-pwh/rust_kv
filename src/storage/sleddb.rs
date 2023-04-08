@@ -1,8 +1,8 @@
 use sled::{Db, IVec};
 use std::{convert::TryInto, path::Path, str};
 
-use crate::{KvError, Kvpair, Storage,  Value};
 use crate::storage::memory::StorageIter;
+use crate::{KvError, Kvpair, Storage, Value};
 
 #[derive(Debug)]
 pub struct SledDb(Db);

@@ -1,16 +1,21 @@
 use crate::error::KvError;
 use crate::pb::abi::Kvpair;
 use crate::Value;
-mod sleddb;
 pub mod memory;
-pub use sleddb::SledDb;
+mod sleddb;
 pub use memory::StorageIter;
+pub use sleddb::SledDb;
 /// 对存储的抽象，我们不关心数据存在哪儿，但需要定义外界如何和存储打交道
 pub trait Storage {
     /// 从一个 HashTable 里获取一个 key 的 value
     fn get(&self, table: &str, key: &str) -> Result<Option<Value>, KvError>;
     /// 从一个 HashTable 里设置一个 key 的 value，返回旧的 value
-    fn set(&self, table: &str, key: impl Into<String>, value: impl Into<Value>) -> Result<Option<Value>, KvError>;
+    fn set(
+        &self,
+        table: &str,
+        key: impl Into<String>,
+        value: impl Into<Value>,
+    ) -> Result<Option<Value>, KvError>;
     /// 查看 HashTable 中是否有 key
     fn contains(&self, table: &str, key: &str) -> Result<bool, KvError>;
     /// 从 HashTable 中删除一个 key
@@ -23,8 +28,8 @@ pub trait Storage {
 
 #[cfg(test)]
 mod tests {
-    use tempfile::tempdir;
     use crate::MemTable;
+    use tempfile::tempdir;
 
     use super::*;
 
