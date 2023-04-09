@@ -1,16 +1,19 @@
 mod frame;
+mod multiplex;
 mod stream;
+mod stream_result;
 mod tls;
 
 pub use frame::{read_frame, FrameCoder};
-use futures::{SinkExt, StreamExt};
+pub use multiplex::YamuxCtrl;
 pub use stream::ProstStream;
+pub use stream_result::StreamResult;
 pub use tls::{TlsClientConnector, TlsServerAcceptor};
 
+use crate::{CommandRequest, CommandResponse, KvError, Service};
+use futures::{SinkExt, StreamExt};
 use tokio::io::{AsyncRead, AsyncWrite};
 use tracing::info;
-
-use crate::{CommandRequest, CommandResponse, KvError, Service};
 
 /// 处理服务器端的某个 accept 下来的 socket 的读写
 pub struct ProstServerStream<S> {
@@ -25,7 +28,7 @@ pub struct ProstClientStream<S> {
 
 impl<S> ProstServerStream<S>
     where
-        S: AsyncRead + AsyncWrite + Unpin + Send,
+        S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
 {
     pub fn new(stream: S, service: Service) -> Self {
         Self {
@@ -38,8 +41,10 @@ impl<S> ProstServerStream<S>
         let stream = &mut self.inner;
         while let Some(Ok(cmd)) = stream.next().await {
             info!("Got a new command: {:?}", cmd);
-            let res = self.service.execute(cmd);
-            stream.send(res).await.unwrap();
+            let mut res = self.service.execute(cmd);
+            while let Some(data) = res.next().await {
+                stream.send(&data).await.unwrap();
+            }
         }
         // info!("Client {:?} disconnected", self.addr);
         Ok(())
@@ -48,7 +53,7 @@ impl<S> ProstServerStream<S>
 
 impl<S> ProstClientStream<S>
     where
-        S: AsyncRead + AsyncWrite + Unpin + Send,
+        S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
 {
     pub fn new(stream: S) -> Self {
         Self {
@@ -56,7 +61,10 @@ impl<S> ProstClientStream<S>
         }
     }
 
-    pub async fn execute(&mut self, cmd: CommandRequest) -> Result<CommandResponse, KvError> {
+    pub async fn execute_unary(
+        &mut self,
+        cmd: &CommandRequest,
+    ) -> Result<CommandResponse, KvError> {
         let stream = &mut self.inner;
         stream.send(cmd).await?;
 
@@ -65,14 +73,25 @@ impl<S> ProstClientStream<S>
             None => Err(KvError::Internal("Didn't get any response".into())),
         }
     }
+
+    pub async fn execute_streaming(self, cmd: &CommandRequest) -> Result<StreamResult, KvError> {
+        let mut stream = self.inner;
+
+        stream.send(cmd).await?;
+        stream.close().await?;
+
+        StreamResult::new(stream).await
+    }
 }
 
 #[cfg(test)]
 pub mod utils {
+    use anyhow::Result;
     use bytes::{BufMut, BytesMut};
-    use std::task::Poll;
+    use std::{cmp::min, task::Poll};
     use tokio::io::{AsyncRead, AsyncWrite};
 
+    #[derive(Default)]
     pub struct DummyStream {
         pub buf: BytesMut,
     }
@@ -83,8 +102,9 @@ pub mod utils {
             _cx: &mut std::task::Context<'_>,
             buf: &mut tokio::io::ReadBuf<'_>,
         ) -> Poll<std::io::Result<()>> {
-            let len = buf.capacity();
-            let data = self.get_mut().buf.split_to(len);
+            let this = self.get_mut();
+            let len = min(buf.capacity(), this.buf.len());
+            let data = this.buf.split_to(len);
             buf.put_slice(&data);
             Poll::Ready(Ok(()))
         }
@@ -118,14 +138,13 @@ pub mod utils {
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Result;
-    use bytes::Bytes;
     use std::net::SocketAddr;
-    use tokio::net::{TcpListener, TcpStream};
-
-    use crate::{assert_res_ok, MemTable, ServiceInner, Value};
 
     use super::*;
+    use crate::{assert_res_ok, MemTable, ServiceInner, Value};
+    use anyhow::Result;
+    use bytes::Bytes;
+    use tokio::net::{TcpListener, TcpStream};
 
     #[tokio::test]
     async fn client_server_basic_communication_should_work() -> anyhow::Result<()> {
@@ -137,17 +156,23 @@ mod tests {
         // 发送 HSET，等待回应
 
         let cmd = CommandRequest::new_hset("t1", "k1", "v1".into());
-        let res = client.execute(cmd).await.unwrap();
+        let res = client.execute_unary(&cmd).await.unwrap();
 
         // 第一次 HSET 服务器应该返回 None
-        assert_res_ok(res, &[Value::default()], &[]);
+        assert_res_ok(&res, &[Value::default()], &[]);
 
         // 再发一个 HSET
         let cmd = CommandRequest::new_hget("t1", "k1");
-        let res = client.execute(cmd).await?;
+        let res = client.execute_unary(&cmd).await?;
 
         // 服务器应该返回上一次的结果
-        assert_res_ok(res, &["v1".into()], &[]);
+        assert_res_ok(&res, &["v1".into()], &[]);
+
+        // 发一个 SUBSCRIBE
+        let cmd = CommandRequest::new_subscribe("chat");
+        let res = client.execute_streaming(&cmd).await?;
+        let id = res.id;
+        assert!(id > 0);
 
         Ok(())
     }
@@ -161,14 +186,14 @@ mod tests {
 
         let v: Value = Bytes::from(vec![0u8; 16384]).into();
         let cmd = CommandRequest::new_hset("t2", "k2", v.clone());
-        let res = client.execute(cmd).await?;
+        let res = client.execute_unary(&cmd).await?;
 
-        assert_res_ok(res, &[Value::default()], &[]);
+        assert_res_ok(&res, &[Value::default()], &[]);
 
         let cmd = CommandRequest::new_hget("t2", "k2");
-        let res = client.execute(cmd).await?;
+        let res = client.execute_unary(&cmd).await?;
 
-        assert_res_ok(res, &[v], &[]);
+        assert_res_ok(&res, &[v], &[]);
 
         Ok(())
     }

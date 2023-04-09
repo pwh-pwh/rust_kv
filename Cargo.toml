@@ -20,7 +20,7 @@ http = "0.2" # 我们使用 HTTP status code 所以引入这个类型库
 prost = "0.9" # 处理 protobuf 的代码
 sled = "0.34"
 thiserror = "1" # 错误定义和处理
-tokio-util = { version = "0.7.7", features = ["codec"] }
+tokio-util = { version = "0.7.7", features = ["codec","compat"] }
 tracing = "0.1" # 日志处理
 tokio = { version = "1", features = ["full"] } # 异步网络库
 flate2 = "1"
@@ -30,6 +30,8 @@ certify = "0.3"
 tokio-rustls = "0.22"
 rustls-native-certs = "0.5.0"
 futures = "0.3"
+yamux = "0.9" # yamux 多路复用支持
+tokio-stream = "0.1.12"
 
 
 [dev-dependencies]

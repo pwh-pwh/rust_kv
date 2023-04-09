@@ -1,8 +1,7 @@
 use sled::{Db, IVec};
 use std::{convert::TryInto, path::Path, str};
 
-use crate::storage::memory::StorageIter;
-use crate::{KvError, Kvpair, Storage, Value};
+use crate::{KvError, Kvpair, Storage, StorageIter, Value};
 
 #[derive(Debug)]
 pub struct SledDb(Db);
@@ -37,15 +36,9 @@ impl Storage for SledDb {
         flip(result)
     }
 
-    fn set(
-        &self,
-        table: &str,
-        key: impl Into<String>,
-        value: impl Into<Value>,
-    ) -> Result<Option<Value>, KvError> {
-        let key = key.into();
+    fn set(&self, table: &str, key: String, value: Value) -> Result<Option<Value>, KvError> {
         let name = SledDb::get_full_key(table, &key);
-        let data: Vec<u8> = value.into().try_into()?;
+        let data: Vec<u8> = value.try_into()?;
 
         let result = self.0.insert(name, data)?.map(|v| v.as_ref().try_into());
         flip(result)

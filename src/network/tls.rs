@@ -65,8 +65,8 @@ impl TlsClientConnector {
 
     /// 触发 TLS 协议，把底层的 stream 转换成 TLS stream
     pub async fn connect<S>(&self, stream: S) -> Result<ClientTlsStream<S>, KvError>
-        where
-            S: AsyncRead + AsyncWrite + Unpin + Send,
+    where
+        S: AsyncRead + AsyncWrite + Unpin + Send,
     {
         let dns = DNSNameRef::try_from_ascii_str(self.domain.as_str())
             .map_err(|_| KvError::Internal("Invalid DNS name".into()))?;
@@ -113,8 +113,8 @@ impl TlsServerAcceptor {
 
     /// 触发 TLS 协议，把底层的 stream 转换成 TLS stream
     pub async fn accept<S>(&self, stream: S) -> Result<ServerTlsStream<S>, KvError>
-        where
-            S: AsyncRead + AsyncWrite + Unpin + Send,
+    where
+        S: AsyncRead + AsyncWrite + Unpin + Send,
     {
         let acceptor = TlsAcceptor::from(self.inner.clone());
         Ok(acceptor.accept(stream).await?)
@@ -146,6 +146,35 @@ fn load_key(key: &str) -> Result<PrivateKey, KvError> {
 
     // 不支持的私钥类型
     Err(KvError::CertifcateParseError("private", "key"))
+}
+
+#[cfg(test)]
+pub mod tls_utils {
+    use crate::{KvError, TlsClientConnector, TlsServerAcceptor};
+
+    const CA_CERT: &str = include_str!("../../fixtures/ca.cert");
+    const CLIENT_CERT: &str = include_str!("../../fixtures/client.cert");
+    const CLIENT_KEY: &str = include_str!("../../fixtures/client.key");
+    const SERVER_CERT: &str = include_str!("../../fixtures/server.cert");
+    const SERVER_KEY: &str = include_str!("../../fixtures/server.key");
+
+    pub fn tls_connector(client_cert: bool) -> Result<TlsClientConnector, KvError> {
+        let ca = Some(CA_CERT);
+        let client_identity = Some((CLIENT_CERT, CLIENT_KEY));
+
+        match client_cert {
+            false => TlsClientConnector::new("kvserver.acme.inc", None, ca),
+            true => TlsClientConnector::new("kvserver.acme.inc", client_identity, ca),
+        }
+    }
+
+    pub fn tls_acceptor(client_cert: bool) -> Result<TlsServerAcceptor, KvError> {
+        let ca = Some(CA_CERT);
+        match client_cert {
+            true => TlsServerAcceptor::new(SERVER_CERT, SERVER_KEY, ca),
+            false => TlsServerAcceptor::new(SERVER_CERT, SERVER_KEY, None),
+        }
+    }
 }
 
 #[cfg(test)]
